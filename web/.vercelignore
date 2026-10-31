@@ -1,0 +1,9 @@
+# Never upload secrets or local data to Vercel; keys are set in the Vercel dashboard instead.
+.env
+.env.*
+!.env.example
+data/
+*.db
+node_modules/
+.next/
+.claude/

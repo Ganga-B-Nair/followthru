@@ -51,7 +51,8 @@ let ready: Promise<void> | null = null;
 
 function getClient(): Client {
   if (!client) {
-    const url = process.env.DATABASE_URL || "file:data/followthru.db";
+    // Vercel's file system is read-only except /tmp, so the demo database lives there when deployed.
+    const url = process.env.DATABASE_URL || (process.env.VERCEL ? "file:/tmp/followthru.db" : "file:data/followthru.db");
     if (url.startsWith("file:")) {
       fs.mkdirSync(path.dirname(url.slice(5)), { recursive: true });
     }
