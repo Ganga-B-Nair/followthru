@@ -206,7 +206,14 @@ The five problem statements were pasted verbatim from the hackathon brief. They 
 - **Phase:** Repository / next features
 - **Source:** 🎙️ Wispr Flow
 - **Sent to:** Claude Code
-- **Outcome:** Created one root git repository and committed the project in small commits of a few files each. Env files, the local database and local tool settings are git-ignored, and every commit was scanned for keys before it was made. No AI attribution trailers were added. The three features come next.
+- **Outcome:**
+  - **Git:** created one root repository and pushed 26 small commits to [GitHub](https://github.com/Ganga-B-Nair/followthru).
+    - Env files, the local database and local tool settings are git-ignored.
+    - Every commit and the full history were scanned for keys.
+    - No AI attribution trailers were added.
+  - **Live call:** a lobby, then a speaker view with your real camera and microphone. Your speech is transcribed in the browser and turned into AI notes live. Placeholder participants light up and speak. When the call ends, the agent runs on what was actually said.
+  - **Meeting page:** a vertical step rail (AI notes, transcript, conflict guard, approve & ship, next meeting) with counts, so approvals are one click away.
+  - **FollowThru Copilot:** a chat agent with 11 tools that rewrites drafts, moves invites, approves, ships, closes tasks and resolves conflicts, and shows each step it took.
 
 ### 🎙️ Wispr Flow: dictated
 

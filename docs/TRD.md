@@ -146,6 +146,20 @@ Prompts live in `web/src/lib/prompts.ts`. Schemas live in `web/src/lib/schemas.t
 | `GET /api/zoom/meetings`, `GET/PATCH /api/zoom/meetings/:id`, `POST /api/zoom/meetings/:id/process` | Zoom calendar / transcript, notetaker on or off / run the agent when the meeting ends |
 | `GET /api/dashboard` | Role-aware home: live meeting, stats, approvals, tasks, decisions |
 
+## 7.2 New in v3 (live call, Copilot)
+
+| Route | Purpose |
+|---|---|
+| `POST /api/live/note` | One utterance from the live call in, one note out (`decision` / `action` / `correction` / `none`). Uses the no-reasoning fast path, so a note takes about 2–4 s |
+| `POST /api/zoom/meetings/:id/process` with `{lines}` | Runs the agent on what was actually said in the call. If the free AI quota runs out, it falls back to the meeting's Zoom transcript |
+| `POST /api/copilot` | Copilot chat. The read tools are the 4 memory tools plus `list_drafts` and `get_draft`. The write tools are `edit_draft`, `set_draft_status`, `ship_approved`, `update_action_item` and `resolve_conflict`, and they are only offered when the user has `approve_drafts` |
+
+**Live call (`/live/:id`):**
+- **Media:** your camera comes from `getUserMedia`, and speech recognition is the browser's Web Speech API (Chrome or Edge).
+- **The meeting:** the Zoom transcript drives the other participants, who can be voiced with `speechSynthesis`. While a placeholder is speaking, recognition results are ignored so their voices aren't transcribed as yours.
+- **Your turn:** on your turn, a cue card shows your line, and you say it in your own words. A 1.4 s pause ends an utterance.
+- **No microphone:** your lines play automatically.
+
 ## 8. Screens
 
 - **Login:** demo accounts (team lead and members).
