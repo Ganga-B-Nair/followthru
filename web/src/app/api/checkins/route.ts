@@ -1,5 +1,6 @@
 import { aiEnabled, nowContext, structured, safe } from "@/lib/ai";
-import { all, newId, nowIso, run, type ActionRow } from "@/lib/db";
+import { ownsItem, requirePermission } from "@/lib/auth";
+import { all, newId, nowIso, one, run, type ActionRow } from "@/lib/db";
 import { CHECKIN } from "@/lib/prompts";
 import { CheckinParse } from "@/lib/schemas";
 
@@ -7,9 +8,15 @@ export const runtime = "nodejs";
 
 /** Voice check-in: parse first, apply only after the person confirms the read-back. */
 export const POST = safe(async (req: Request) => {
+  const s = await requirePermission();
+  if (s instanceof Response) return s;
   const body = (await req.json()) as { person: string; text?: string; updates?: CheckinParse["updates"]; confirm?: boolean };
+  // You can only check in on your own items.
+  if (!ownsItem(s, body.person)) return Response.json({ error: `Only ${body.person} can check in on their own items.` }, { status: 403 });
   if (body.confirm && body.updates) {
     for (const u of body.updates) {
+      const item = await one<ActionRow>("SELECT * FROM action_items WHERE id = ?", [u.action_id]);
+      if (!item || !ownsItem(s, item.owner)) continue;
       await run("UPDATE action_items SET status = ?, blocked_reason = ?, due_at = COALESCE(?, due_at) WHERE id = ?",
         [u.status, u.blocked_reason, u.new_due_iso, u.action_id]);
     }

@@ -81,6 +81,15 @@ export async function requirePermission(perm?: Permission): Promise<Session | Re
   return s;
 }
 
+/**
+ * Only the owner of an action item can check it off, lead included. Walk-out Recaps record the
+ * speaker's own items as "Me"; in this workspace recaps are recorded by the team lead.
+ */
+export function ownsItem(s: Session, owner: string | null): boolean {
+  const o = (owner ?? "").trim().toLowerCase();
+  return o === s.user.person.toLowerCase() || o === s.user.name.toLowerCase() || (o === "me" && s.user.role === "lead");
+}
+
 /** Members without view_all_meetings only see meetings they were part of. */
 export function canSeeMeeting(s: Session, attendeesJson: string | null): boolean {
   if (s.perms.view_all_meetings) return true;

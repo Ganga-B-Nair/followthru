@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Markdown from "@/components/Markdown";
+import { useSession } from "@/components/SessionProvider";
 import { fmtDate } from "@/lib/ui";
 
 type Person = { name: string; email: string | null; open_count: number; done_count: number };
@@ -9,6 +10,7 @@ type Item = { id: string; text: string; owner: string | null; due_at: string | n
 type Update = { action_id: string; status: string; blocked_reason: string | null; new_due_iso: string | null };
 
 export default function People() {
+  const { user } = useSession();
   const [data, setData] = useState<{ people: Person[]; items: Item[] } | null>(null);
   const [sel, setSel] = useState<string | null>(null);
   const [digest, setDigest] = useState<{ markdown: string; emailUrl: string } | null>(null);
@@ -24,6 +26,8 @@ export default function People() {
   useEffect(() => { load(); }, [load]);
 
   const items = data?.items.filter((i) => i.owner?.toLowerCase() === sel?.toLowerCase()) ?? [];
+  // Only the owner checks off their items (the server enforces this too); "Me" is the lead's own recap items.
+  const mine = !!user && !!sel && (sel.toLowerCase() === user.person.toLowerCase() || (sel === "Me" && user.role === "lead"));
   const now = Date.now();
 
   async function makeDigest() {
@@ -69,14 +73,18 @@ export default function People() {
       {sel && (
         <div className="grid gap-4 md:grid-cols-[1.2fr_1fr] [&>*]:min-w-0">
           <div className="card p-6">
-            <h2 className="mb-2 font-semibold">{sel === "Me" ? "Your" : `${sel}'s`} items</h2>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h2 className="font-semibold">{mine ? "Your" : `${sel}'s`} items</h2>
+              {!mine && <span className="chip">🔒 Only {sel} can check these off</span>}
+            </div>
             {items.length === 0 && <div className="text-sm text-muted">Nothing assigned.</div>}
             <ul className="space-y-2">
               {items.map((i) => {
                 const overdue = i.status !== "done" && i.due_at && new Date(i.due_at).getTime() < now;
                 return (
                   <li key={i.id} className="flex gap-2 text-sm">
-                    <input type="checkbox" className="mt-1" checked={i.status === "done"} onChange={() => toggle(i)} />
+                    <input type="checkbox" className="mt-1 disabled:cursor-not-allowed disabled:opacity-40" checked={i.status === "done"} disabled={!mine}
+                      title={mine ? "Mark done" : `Only ${sel} can check this off`} onChange={() => toggle(i)} />
                     <div>
                       <div className={i.status === "done" ? "text-muted line-through" : ""}>{i.text}</div>
                       <div className="text-xs text-muted">
@@ -90,7 +98,7 @@ export default function People() {
             </ul>
           </div>
           <div className="space-y-4">
-            <div className="card p-6">
+            {mine && <div className="card p-6">
               <div className="mb-2 text-sm font-medium">🎙️ Voice check-in</div>
               <textarea className="field" rows={3} value={checkin} onChange={(e) => setCheckin(e.target.value)}
                 placeholder={'"Done with the regression suite, uh, but the sign-off is stuck waiting on Priya"'} />
@@ -105,7 +113,7 @@ export default function People() {
                   </div>
                 </div>
               )}
-            </div>
+            </div>}
             <div className="card p-6">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-medium">📬 Weekly digest</div>
