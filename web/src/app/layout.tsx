@@ -10,6 +10,7 @@ const code = JetBrains_Mono({ variable: "--ff-code", subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "FollowThru",
   description: "The AI notetaker for Zoom that doesn't make to-dos. It does them.",
+  icons: { icon: "/logo.png" },
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#121a15" };
