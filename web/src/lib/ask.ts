@@ -5,7 +5,7 @@ import { ASK } from "./prompts";
 
 // A real tool-use agent: Claude decides which memory lookups to run, loops until it can answer.
 
-const tools: Anthropic.Tool[] = [
+export const tools: Anthropic.Tool[] = [
   {
     name: "search_decisions",
     description: "Full-text search over every decision ever recorded, newest first. Returns decision text, status (active/superseded/flagged), meeting title and date.",
@@ -36,7 +36,7 @@ const tools: Anthropic.Tool[] = [
   },
 ];
 
-async function runTool(name: string, input: Record<string, unknown>): Promise<unknown> {
+export async function runTool(name: string, input: Record<string, unknown>): Promise<unknown> {
   switch (name) {
     case "search_decisions": {
       const terms = String(input.query ?? "").toLowerCase().split(/\s+/).filter(Boolean);
