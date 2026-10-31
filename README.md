@@ -3,6 +3,8 @@
 > 🎙️ **Built entirely by voice with [Wispr Flow](https://wisprflow.ai), and it runs on voice.**
 > Every prompt used to build this project was dictated through Wispr Flow into Claude Code. The full, unedited prompt log is in [`docs/prompts.md`](docs/prompts.md).
 
+**🔗 Live demo: [followthru-mu.vercel.app](https://followthru-mu.vercel.app)** (start at [`/intro`](https://followthru-mu.vercel.app/intro), or sign in as Priya, the team lead)
+
 **Other tools turn meetings into to-dos. FollowThru turns them into done.** FollowThru works alongside Zoom. Its AI notetaker joins your call and takes notes live. When the call ends, the follow-up emails, calendar invites, docs and tasks are already drafted, checked against everything your team decided before, and waiting for one approval. For meetings Zoom never sees (in person, a phone call, a lecture, a doctor's visit), hold your Wispr Flow key and talk for 30 seconds.
 
 ## Why it's different
