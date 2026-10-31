@@ -136,14 +136,17 @@ Every prompt I dictated while building: [[repo link]]/blob/main/docs/prompts.md
 **Visual:** the demo video, uploaded natively. **First comment:** the links below.
 
 ```
-We shipped it! 🚀
+Every meeting ends with “someone should send that.”
+Nobody ever does.
 
-In one day, between exam prep sessions, I built FollowThru for the AI Hackathon by Product Space in collaboration with Wispr Flow.
+So I built the someone. 🎙️
+
+We shipped it! 🚀 In one day, between exam prep sessions, I built FollowThru for the AI Hackathon by Product Space in collaboration with Wispr Flow.
 
 And I didn't type a single prompt. Every instruction that built this app was dictated through Wispr Flow. So was this post. 🎙️
 
 The problem:
-Every meeting ends with “great, someone will send that”… and then nobody does. AI notetakers didn't fix it; they just gave us a longer to-do list.
+Follow-ups die in the gap between one meeting ending and the next one starting. AI notetakers didn't fix it; they just gave us a longer to-do list.
 
 What I built:
 FollowThru, an AI notetaker that works alongside Zoom and doesn't make to-dos. It does them.
