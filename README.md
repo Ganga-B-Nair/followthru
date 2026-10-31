@@ -19,9 +19,10 @@
 ## Features
 
 - 📹 **Live call with your real camera and mic:** join from a lobby. Your speech is transcribed in the browser, and each thing you say is turned into an AI note (decision, action item or resolved self-correction) while the call is still going. The other participants are placeholders whose tiles light up as they speak
-- ✦ **FollowThru Copilot:** a chat agent on every page that *acts*. It rewrites a draft ("make the Acme email warmer"), moves an invite, approves or skips drafts, ships them, closes tasks and resolves conflicts, and shows each tool step it ran
+- ✦ **Closer:** a chat agent on every page that *acts* and closes your open loops. It rewrites a draft ("make the Acme email warmer"), moves an invite, approves or skips drafts, ships them, closes tasks and resolves conflicts, and shows each tool step it ran
 - 🔗 **Connections:** Zoom webhook (signature-verified, transcript import), Google Calendar, Gmail, Notion, Slack, Jira, GitHub
-- 🛡️ **Team lead and member roles:** a permission matrix enforced on the server. Dictate *"let members see all meeting notes but not each other's tasks"*, then confirm
+- 🎬 **Built-in demo intro and outro:** `/intro` plays a voice-bar loader, three questions and the reveal, then a curtain opens on the sign-in page (it also resets the demo data). **End demo** in the header closes the curtain and shows why FollowThru matters
+- 🛡️ **Team lead and member roles:** only the owner of an action item can check it off, the lead included. a permission matrix enforced on the server. Dictate *"let members see all meeting notes but not each other's tasks"*, then confirm
 - 🎙️ **Walk-out Recap:** a 30-second timer, built for Wispr Flow
 - 🧹 **Speech-to-Intent diff:** shows *what was said → what was meant*
 - 🧠 **Extraction:** AI notes, decisions, owners, deadlines (relative dates resolved), soft commitments; low-confidence items flagged ❓
@@ -38,7 +39,7 @@
 ## AI integration
 
 A multi-step agent with schema-validated outputs at every step:
-live note-taking during the call → speech-to-intent → extraction and AI notes → memory recall → conflict judge ∥ execution drafting → voice commands → **Copilot**, a function-calling agent with 11 tools that reads memory and acts on drafts, tasks and conflicts (action tools only for users allowed to approve).
+live note-taking during the call → speech-to-intent → extraction and AI notes → memory recall → conflict judge ∥ execution drafting → voice commands → **Closer**, a function-calling agent with 11 tools that reads memory and acts on drafts, tasks and conflicts (action tools only for users allowed to approve).
 It runs on **Google Gemini's free tier**, any OpenAI-compatible model, or Claude. With no key, a demo mode uses hand-checked results. See [docs/TRD.md](docs/TRD.md).
 
 ## Run it

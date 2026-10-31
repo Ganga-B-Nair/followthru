@@ -146,19 +146,22 @@ Prompts live in `web/src/lib/prompts.ts`. Schemas live in `web/src/lib/schemas.t
 | `GET /api/zoom/meetings`, `GET/PATCH /api/zoom/meetings/:id`, `POST /api/zoom/meetings/:id/process` | Zoom calendar / transcript, notetaker on or off / run the agent when the meeting ends |
 | `GET /api/dashboard` | Role-aware home: live meeting, stats, approvals, tasks, decisions |
 
-## 7.2 New in v3 (live call, Copilot)
+## 7.2 New in v3 (live call, Closer)
 
 | Route | Purpose |
 |---|---|
 | `POST /api/live/note` | One utterance from the live call in, one note out (`decision` / `action` / `correction` / `none`). Uses the no-reasoning fast path, so a note takes about 2–4 s |
 | `POST /api/zoom/meetings/:id/process` with `{lines}` | Runs the agent on what was actually said in the call. If the free AI quota runs out, it falls back to the meeting's Zoom transcript |
-| `POST /api/copilot` | Copilot chat. The read tools are the 4 memory tools plus `list_drafts` and `get_draft`. The write tools are `edit_draft`, `set_draft_status`, `ship_approved`, `update_action_item` and `resolve_conflict`, and they are only offered when the user has `approve_drafts` |
+| `POST /api/closer` | Closer chat (formerly Copilot). The read tools are the 4 memory tools plus `list_drafts` and `get_draft`. The write tools are `edit_draft`, `set_draft_status`, `ship_approved`, `update_action_item` and `resolve_conflict`, and they are only offered when the user has `approve_drafts`, except `update_action_item`, which everyone has for their own items |
 
 **Live call (`/live/:id`):**
-- **Media:** your camera comes from `getUserMedia`, and speech recognition is the browser's Web Speech API (Chrome or Edge).
-- **The meeting:** the Zoom transcript drives the other participants, who can be voiced with `speechSynthesis`. While a placeholder is speaking, recognition results are ignored so their voices aren't transcribed as yours.
-- **Your turn:** on your turn, a cue card shows your line, and you say it in your own words. A 1.4 s pause ends an utterance.
+- **Media:** camera and microphone come from `getUserMedia`, with mute and video toggles.
+- **The meeting:** the Zoom transcript drives the other participants, who can be voiced with `speechSynthesis`.
+- **Your lines** are scripted for the demo. A voice meter on the microphone (Web Audio RMS against an adaptive noise floor) types your line out word by word while you talk. A pause commits it, and Space commits it straight away.
+- **Live AI notes:** each committed line still goes to the live-note AI.
 - **No microphone:** your lines play automatically.
+
+**Ownership:** action items can only be updated by their owner, the lead included. `ownsItem()` is checked in `/api/actions/:id`, `/api/checkins` and Closer's `update_action_item`; "Me" items from Walk-out Recaps belong to the lead who recorded them.
 
 ## 8. Screens
 

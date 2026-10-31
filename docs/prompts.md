@@ -22,6 +22,7 @@ Screenshots of each Wispr Flow session go in [`screenshots/`](screenshots/) and 
 | 09 | Polish + speed | 🎙️ Wispr Flow + palette image | Claude Code | Earthy palette and a less corporate font, test the free Gemini key, fix demo latency |
 | 10 | Demo run-through | 🎙️ Wispr Flow | Claude Code | "Run the demo": full click-through on live Gemini; fixed a quota-fallback edge case; reset for recording |
 | 11 | Git repo + next features | 🎙️ Wispr Flow | Claude Code | Commit everything in small, secret-free commits with no AI trailers; then live camera call, tabbed meeting page, and a chatbot |
+| 12 | Demo polish | 🎙️ Wispr Flow | Claude Code | Intro loader and curtain, end-demo USP screen, scripted live lines with mic/cam toggles, owner-only check-off, solid notifications, Copilot renamed Closer, logo slot |
 
 ---
 
@@ -230,6 +231,41 @@ The five problem statements were pasted verbatim from the hackathon brief. They 
 > 1. For the meeting screen, instead of just a plain screen, open the camera at that point. I'll sit here and say something, and then have the AI take note of that as well, like show a live transcript of that. It should actually work: the actual call should go on over there. My screen, my camera can actually work, but the rest of it, the rest of the screens, would just keep a few placeholders and then light up one of the placeholders as if the other person is saying something. It's like a proper actual demo.
 > 2. The automation is good, but the queue is so far away, and there is so much crowding. On the page after the meeting, the approval is only at the end. Either segment that differently, like have two more things before that as vertical tabs or something, because it gets really, really boring. I don't know why. It just looks a bit normal, boring.
 > 3. I want the demo to be really, really good. AI integration: okay, there is AI, but maybe let's add a chatbot to this. Define a new purpose for a new chatbot addition to this, so that for the AI integration, I'll get full marks. Add a chatbot so that I can show its functionality as well. I don't need a demo script right now for the demo video. Again, I'll record the demo video after all these changes have been made, and I need to finish by 9, so I need these changes done really quickly.
+
+---
+
+## Prompt 12: Intro, outro and demo polish
+
+- **Phase:** Demo video polish
+- **Source:** 🎙️ Wispr Flow
+- **Sent to:** Claude Code
+- **Outcome:**
+  - **`/intro`:** a Wispr-style voice-bar loading bar, three "Are you tired of…" screens and an "Introducing FollowThru" reveal. A curtain then splits open on the sign-in page, and the demo data resets for every take.
+  - **End demo:** a header button closes the curtain on "That's a wrap", opens on six reasons FollowThru matters with a closing line, and finishes on a final curtain.
+  - **Live call:** the on-screen demo text is gone. You say scripted lines, and a voice meter on your mic types them out as you talk. Mute and video toggles were added.
+  - **Action items:** only the owner can check them off, the lead included. This applies to the Tasks page, voice check-ins and Closer.
+  - **Smaller fixes:**
+    - The notification panel is solid.
+    - Copilot is renamed **Closer**.
+    - The logo reads from `web/public/logo.png`.
+    - Pipeline streams survive a browser leaving mid-run.
+
+### 🎙️ Wispr Flow: dictated
+
+> Is almost perfect right now. What I need is a loading screen before we actually go to the actual demo. This is so that I don't have to edit it in for the demo video.
+> What it has to say is something catchy, like a catchy block:
+> - Are you tired of something catchy?
+> - Are you tired of having to take notes over and over again?
+> - Do you wish it was actionable items and a three-screen thing like that, introducing, and then curtain split, and we come to our front loading page, the first page, not the page inside the page and the first page?
+> I have to screen record this, so I actually have to speak in the meeting thing. I'd rather have it so that I speak, with a small voice on and off and camera on and off. I speak into it, and Wispr actually catches that. Instead of having the demo text there, remove the demo text there. The rest of it is pretty okay.
+> Also, something I need you to edit is that the team leader is able to check off other people's action items. That shouldn't happen. The team leader should only be able to check off their own action items. Same for everyone: everyone shouldn't be able to tick off everyone else's action items.
+> I need to be able to show every single feature in this. Every single page, every single feature has to be shown, and this has to be a really detailed demo video. I shouldn't have to narrate every single thing because the look should explain itself. It mostly does that. The only issues are these few things.
+> Also, the notification thing is translucent, so it's not readable. Don't make it translucent. Just make it solid when the notification bell icon is pressed. For the layout for the notifications, just make it solid.
+> What I want next is for there to be a closing screen as well. At the end of it, have an end demo and a closing curtain and all of that as well, so that I can just take the entirety of the demo in one go. I don't have to add something else to it or anything of that sort.
+> Also, instead of the curtain opening at first, as I said, first cross that and just add a loading bar that says something like these voice bars that Wispr has. Do the loading bars in the same manner. Do that much, and then we'll see.
+> Also, script a line for me to say while doing the demo so that the exact same line is printed there. You don't actually have to process my voice. It's a demo, right, so it doesn't matter if it actually processes. I just need to be able to show this.
+> Also, by the end, after I click end demo, the screen should show what the USP is properly. Not just a paragraph, but a few points on why this matters, why it is good, and then a banging conclusion should be there. That's what I need to make next. I'm almost at the end of my time, so I need this to be done really quickly as well. Don't rush, don't do rush work. Just do it properly.
+> Also, the copilot: don't call it copilot. Rename it something else. Give it a fun name, something that relates to follow-through in itself. Also, I'll upload a PNG for the logo. Just use that logo. Don't use this logo.
 
 ---
 
