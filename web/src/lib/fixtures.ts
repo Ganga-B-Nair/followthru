@@ -15,19 +15,13 @@ export type Fixture = {
 const blank = { email: null, calendar: null, doc: null, announce: null, task: null };
 
 export const SPRINT_TRANSCRIPT: TranscriptLine[] = [
-  { at: 0, speaker: "Priya", text: "Okay, let's get started. This is sprint 14 planning. Arjun, Meera, Ravi, thanks for joining." },
-  { at: 6, speaker: "Priya", text: "First thing. I think we should drop the dark-mode export from this sprint. It's not what customers are asking for.", tag: "decision" },
-  { at: 13, speaker: "Ravi", text: "Agreed. Onboarding redesign is the bigger win. Let's commit to shipping that in sprint 14.", tag: "decision" },
-  { at: 20, speaker: "Meera", text: "For the Acme beta, how many users are we inviting? Thirty? Actually, no, let's keep it to twenty so we can support them properly.", tag: "correction" },
-  { at: 28, speaker: "Priya", text: "Twenty it is. Beta starts Monday the 9th.", tag: "decision" },
-  { at: 32, speaker: "Priya", text: "Meera, can you email Acme and get the twenty users invited?" },
-  { at: 36, speaker: "Meera", text: "Yep, I'll send that today.", tag: "action" },
-  { at: 39, speaker: "Arjun", text: "I'll set up the beta feedback form by Friday.", tag: "action" },
-  { at: 44, speaker: "Priya", text: "Ravi, can you write the beta onboarding guide? Something they can follow without us on a call." },
-  { at: 50, speaker: "Ravi", text: "Sure, I'll have a draft by Wednesday.", tag: "action" },
-  { at: 54, speaker: "Priya", text: "And let's book a kickoff call with Acme on Monday at 11, um, actually make it 11:30, I have a conflict.", tag: "correction" },
-  { at: 62, speaker: "Arjun", text: "Should we tell the rest of the team dark mode is out? Support has been promising it to customers." },
-  { at: 68, speaker: "Priya", text: "Yes, someone please post that in the team channel. Okay, that's it, thanks all.", tag: "action" },
+  // Priya's two lines are the ones you say on camera during the demo.
+  { at: 0, speaker: "Priya", text: "Let's start sprint 14. First, we're dropping the dark-mode export. Customers aren't asking for it.", tag: "decision" },
+  { at: 7, speaker: "Ravi", text: "Agreed. Onboarding redesign is the bigger win. Let's commit to shipping that in sprint 14.", tag: "decision" },
+  { at: 14, speaker: "Meera", text: "For the Acme beta, how many users are we inviting? Thirty? Actually, no, let's keep it to twenty so we can support them properly. Beta starts Monday the 9th.", tag: "correction" },
+  { at: 23, speaker: "Arjun", text: "I'll set up the beta feedback form by Friday, and I'll tell the team dark mode is out.", tag: "action" },
+  { at: 30, speaker: "Ravi", text: "And I'll have the beta onboarding guide drafted by Wednesday.", tag: "action" },
+  { at: 35, speaker: "Priya", text: "Great. Meera, invite the twenty Acme users today, and book the kickoff for Monday at 11, actually 11:30. Thanks all.", tag: "correction" },
 ];
 
 export const transcriptText = (lines: TranscriptLine[]) => lines.map((l) => `${l.speaker}: ${l.text}`).join("\n");
@@ -187,14 +181,14 @@ const FIXTURES: Fixture[] = [
     },
   },
   {
-    match: "Priya: Okay, let's get started. This is sprint 14 planning",
+    match: "Priya: Let's start sprint 14. First, we're dropping the dark-mode export",
     clean: {
       clean_text: transcriptText(SPRINT_TRANSCRIPT)
         .replace("Thirty? Actually, no, let's keep it to twenty", "Let's keep it to twenty")
-        .replace("on Monday at 11, um, actually make it 11:30", "on Monday at 11:30"),
+        .replace("for Monday at 11, actually 11:30", "for Monday at 11:30"),
       corrections: [
         { original: "Thirty? Actually, no, let's keep it to twenty", resolved: "twenty users", kind: "self_correction" },
-        { original: "on Monday at 11, um, actually make it 11:30", resolved: "Monday at 11:30", kind: "self_correction" },
+        { original: "for Monday at 11, actually 11:30", resolved: "Monday at 11:30", kind: "self_correction" },
       ],
     },
     extract: {
@@ -216,14 +210,14 @@ const FIXTURES: Fixture[] = [
       decisions: [
         { text: "Dark-mode export is dropped from Sprint 14.", topic_tags: ["dark-mode", "export", "sprint", "roadmap"], speaker: "Priya" },
         { text: "Sprint 14 commits to shipping the onboarding redesign.", topic_tags: ["onboarding", "sprint"], speaker: "Ravi" },
-        { text: "The Acme beta starts Monday 9 November with 20 users.", topic_tags: ["beta", "acme"], speaker: "Priya" },
+        { text: "The Acme beta starts Monday 9 November with 20 users.", topic_tags: ["beta", "acme"], speaker: "Meera" },
       ],
       action_items: [
         { text: "Email Acme to invite the 20 beta users", owner: "Meera", owner_confidence: "high", due_iso: "2026-10-31T18:00:00+05:30", due_phrase: "today", due_confidence: "high", implicit: false },
         { text: "Set up the beta feedback form", owner: "Arjun", owner_confidence: "high", due_iso: "2026-11-06T18:00:00+05:30", due_phrase: "by Friday", due_confidence: "high", implicit: false },
         { text: "Write the beta onboarding guide", owner: "Ravi", owner_confidence: "high", due_iso: "2026-11-04T18:00:00+05:30", due_phrase: "by Wednesday", due_confidence: "high", implicit: false },
         { text: "Book the Acme beta kickoff call", owner: "Priya", owner_confidence: "high", due_iso: "2026-11-09T11:30:00+05:30", due_phrase: "Monday at 11:30", due_confidence: "high", implicit: false },
-        { text: "Tell the team that dark-mode export is out of this sprint", owner: null, owner_confidence: "low", due_iso: null, due_phrase: null, due_confidence: "low", implicit: false },
+        { text: "Tell the team that dark-mode export is out of this sprint", owner: "Arjun", owner_confidence: "high", due_iso: null, due_phrase: null, due_confidence: "low", implicit: false },
       ],
     },
     conflicts: [
