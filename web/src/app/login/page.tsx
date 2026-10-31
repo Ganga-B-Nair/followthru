@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Icon from "@/components/Icon";
+import Logo from "@/components/Logo";
 import { Avatar, type User } from "@/components/SessionProvider";
 
 export default function Login() {
@@ -25,7 +26,7 @@ export default function Login() {
         <div className="absolute -right-40 -top-40 h-[520px] w-[520px] rounded-full bg-accent/25 blur-[120px]" />
         <div className="absolute -bottom-40 -left-20 h-[420px] w-[420px] rounded-full bg-accent-2/15 blur-[120px]" />
         <div className="relative flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-xl font-bold text-accent-ink">↗</span>
+          <Logo size={44} />
           <span className="text-xl font-semibold">FollowThru</span>
         </div>
         <div className="relative max-w-xl">
