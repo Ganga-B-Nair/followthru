@@ -19,8 +19,8 @@ const ME = "Priya";
 const COLORS: Record<string, string> = { Priya: "#a3b18a", Meera: "#7fa7a0", Ravi: "#d9b36c", Arjun: "#c98a6b" };
 const colorOf = (name: string) => COLORS[name.split(" ")[0]] ?? "#7c8a70";
 const first = (name: string) => name.split(" ")[0];
-const WORD_MS = 190;      // how fast your line types out while you're talking
-const PAUSE_MS = 1300;    // silence that ends your turn
+const WORD_MS = 150;      // how fast your line types out while you're talking
+const PAUSE_MS = 1100;    // silence that ends your turn
 
 const TAG = {
   decision: { label: "Decision", cls: "border-accent/40 bg-accent-soft text-accent", icon: "◆" },
@@ -108,16 +108,18 @@ export default function Live() {
 
   /** Your line goes to the AI notetaker, which decides whether it's a decision, an action or a correction. */
   const noteFromAI = useCallback(async (line: Line, item: ScriptLine) => {
+    // The note appears at once from the transcript; the AI's version replaces it if it answers in time.
+    const speaker = `${ME} (you)`;
+    if (item.tag) setNotes((p) => [...p, { key: line.at, tag: item.tag!, speaker, text: item.text, ai: false }]);
     const context = linesRef.current.slice(-8, -1).map((l) => `${l.speaker}: ${l.text}`);
     try {
       const r = await fetch("/api/live/note", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ speaker: ME, text: line.text, context }) });
       const n = (await r.json()) as { tag: Tag | "none"; note: string };
-      if (!r.ok) throw new Error();
-      if (n.tag !== "none") setNotes((p) => [...p, { key: line.at, tag: n.tag as Tag, speaker: `${ME} (you)`, text: n.note, ai: true }]);
-    } catch {
-      pushScripted(item, `${ME} (you)`); // free AI quota busy: fall back to the transcript's own tag
-    }
-  }, [pushScripted]);
+      if (!r.ok || n.tag === "none") return;
+      const ai: Note = { key: line.at, tag: n.tag, speaker, text: n.note, ai: true };
+      setNotes((p) => (p.some((x) => x.key === line.at) ? p.map((x) => (x.key === line.at ? ai : x)) : [...p, ai]));
+    } catch {} // free AI busy: the transcript's note stays
+  }, []);
 
   const advance = useCallback(() => { idxRef.current += 1; setIdx(idxRef.current); }, []);
 
@@ -148,7 +150,7 @@ export default function Live() {
       analyser.getFloatTimeDomainData(buf);
       const rms = Math.sqrt(buf.reduce((s, v) => s + v * v, 0) / buf.length);
       const now = performance.now();
-      const loud = micOnRef.current && rms > Math.max(0.02, noise.current * 3);
+      const loud = micOnRef.current && rms > Math.max(0.012, noise.current * 2.5);
       if (!loud) noise.current = noise.current * 0.995 + rms * 0.005; // track the room's background level
       setLevel(micOnRef.current ? Math.min(1, rms * 9) : 0);
 
