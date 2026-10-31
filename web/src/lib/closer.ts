@@ -1,10 +1,11 @@
 import { chatCompletion, nowContext, provider, type OpenAIMessage } from "./ai";
 import { askMemory, runTool, tools as memoryTools } from "./ask";
-import { all, one, run, type ConflictRow, type DraftRow } from "./db";
-import { COPILOT } from "./prompts";
+import { ownsItem, type Session } from "./auth";
+import { all, one, run, type ActionRow, type ConflictRow, type DraftRow } from "./db";
+import { CLOSER } from "./prompts";
 import { applyOps, executeApproved, type Payload } from "./queue";
 
-// Copilot: a chat agent that acts on what the meeting agent produced. Memory tools are shared with Ask;
+// Closer: a chat agent that acts on what the meeting agent produced. Memory tools are shared with Ask;
 // the action tools below change drafts, tasks and conflicts, and are only offered to users who may approve.
 
 type Fn = { type: "function"; function: { name: string; description: string; parameters: Record<string, unknown> } };
@@ -26,7 +27,7 @@ const WRITE_TOOLS: Fn[] = [
     { ids: { type: "array", items: { type: "string" } }, status: { type: "string", enum: ["approved", "rejected"] } }, ["ids", "status"]),
   fn("ship_approved", "Ship approved drafts: emails open in Gmail, invites in Google Calendar, docs go to Notion. Only when the user asked to send or ship.",
     { ids: { type: "array", items: { type: "string" } } }, ["ids"]),
-  fn("update_action_item", "Mark an action item open, done or blocked (with a reason).",
+  fn("update_action_item", "Mark one of the signed-in user's own action items open, done or blocked (with a reason). Nobody can check off someone else's item.",
     { id: { type: "string" }, status: { type: "string", enum: ["open", "done", "blocked"] }, blocked_reason: { type: "string" } }, ["id", "status"]),
   fn("resolve_conflict", "Resolve a conflict: supersede (today's decision replaces the old one), keep_both, or flag for the next meeting.",
     { id: { type: "string" }, resolution: { type: "string", enum: ["supersede", "keep_both", "flag"] } }, ["id", "resolution"]),
@@ -35,7 +36,7 @@ const WRITE_NAMES = new Set(WRITE_TOOLS.map((t) => t.function.name));
 
 const label = (p: Payload) => p.email?.subject ?? p.calendar?.title ?? p.doc?.title ?? p.task?.title ?? p.announce?.text.slice(0, 70) ?? "";
 
-async function runCopilotTool(name: string, input: Record<string, unknown>): Promise<unknown> {
+async function runCloserTool(name: string, input: Record<string, unknown>, s: Session): Promise<unknown> {
   switch (name) {
     case "list_drafts": {
       const where: string[] = [];
@@ -62,9 +63,13 @@ async function runCopilotTool(name: string, input: Record<string, unknown>): Pro
     }
     case "ship_approved":
       return executeApproved((input.ids as string[] | undefined) ?? []);
-    case "update_action_item":
+    case "update_action_item": {
+      const item = await one<ActionRow>("SELECT * FROM action_items WHERE id = ?", [String(input.id)]);
+      if (!item) return { error: "No action item with that id" };
+      if (!ownsItem(s, item.owner)) return { error: `Only ${item.owner ?? "its owner"} can update this item. Suggest a nudge instead.` };
       await run("UPDATE action_items SET status = ?, blocked_reason = ? WHERE id = ?", [String(input.status), (input.blocked_reason as string | undefined) ?? null, String(input.id)]);
       return { ok: true };
+    }
     case "resolve_conflict": {
       const c = await one<ConflictRow>("SELECT * FROM conflicts WHERE id = ?", [String(input.id)]);
       if (!c) return { error: "No conflict with that id" };
@@ -73,7 +78,7 @@ async function runCopilotTool(name: string, input: Record<string, unknown>): Pro
       else if (input.resolution === "flag") await run("UPDATE decisions SET status = 'flagged' WHERE id IN (?, ?)", [c.new_decision_id, c.old_decision_id]);
       return { ok: true };
     }
-    // Copilot needs ids to act on, which the shared Ask versions of these two leave out.
+    // Closer needs ids to act on, which the shared Ask versions of these two leave out.
     case "get_conflicts":
       return all(
         `SELECT c.id, c.kind, c.explanation, c.resolution, nd.text AS new_decision, od.text AS old_decision FROM conflicts c
@@ -89,24 +94,27 @@ async function runCopilotTool(name: string, input: Record<string, unknown>): Pro
 }
 
 export type ChatTurn = { role: "user" | "assistant"; content: string };
-export type CopilotStep = { tool: string; args: Record<string, unknown>; acted: boolean };
+export type CloserStep = { tool: string; args: Record<string, unknown>; acted: boolean };
 
-export async function copilot(
-  history: ChatTurn[], page: { path: string; meetingId: string | null }, canAct: boolean,
-): Promise<{ answer: string; steps: CopilotStep[]; changed: boolean }> {
-  // Without an OpenAI-compatible model, Copilot answers from memory only (the Ask agent).
+export async function closer(
+  history: ChatTurn[], page: { path: string; meetingId: string | null }, s: Session,
+): Promise<{ answer: string; steps: CloserStep[]; changed: boolean }> {
+  // Without an OpenAI-compatible model, Closer answers from memory only (the Ask agent).
   if (provider() !== "openai") {
     const r = await askMemory(history[history.length - 1]?.content ?? "");
-    return { answer: r.answer, steps: r.steps.map((s) => ({ tool: s.split("(")[0], args: {}, acted: false })), changed: false };
+    return { answer: r.answer, steps: r.steps.map((step) => ({ tool: step.split("(")[0], args: {}, acted: false })), changed: false };
   }
-  const fnTools = canAct ? [...READ_TOOLS, ...WRITE_TOOLS] : READ_TOOLS;
-  const context = `${nowContext()}\nPage: ${page.path}${page.meetingId ? ` (meeting id ${page.meetingId})` : ""}`
-    + (canAct ? "" : "\nThis user is a team member without approval rights: look things up, but you cannot change drafts, tasks or conflicts.");
+  // Everyone can update their own action items; drafts and conflicts need approval rights.
+  const canAct = s.perms.approve_drafts === true;
+  const fnTools = canAct ? [...READ_TOOLS, ...WRITE_TOOLS] : [...READ_TOOLS, ...WRITE_TOOLS.filter((t) => t.function.name === "update_action_item")];
+  const context = `${nowContext()}\nSigned in as ${s.user.name} (${s.user.role === "lead" ? "team lead" : "team member"}). Their own action items are owned by "${s.user.person}"${s.user.role === "lead" ? ' or "Me"' : ""}; they cannot check off anyone else's.`
+    + `\nPage: ${page.path}${page.meetingId ? ` (meeting id ${page.meetingId})` : ""}`
+    + (canAct ? "" : "\nThis user has no approval rights: they can look things up and update their own action items, but cannot change drafts or conflicts.");
   const messages: OpenAIMessage[] = [
-    { role: "system", content: `${COPILOT}\n\n${context}` },
+    { role: "system", content: `${CLOSER}\n\n${context}` },
     ...history.slice(-10).map((h): OpenAIMessage => ({ role: h.role, content: h.content })),
   ];
-  const steps: CopilotStep[] = [];
+  const steps: CloserStep[] = [];
   for (let turn = 0; turn < 8; turn++) {
     const out = await chatCompletion({ messages, tools: fnTools, tool_choice: "auto" });
     const msg = out.choices[0].message;
@@ -119,7 +127,7 @@ export async function copilot(
       steps.push({ tool: call.function.name, args, acted });
       let content: string;
       try {
-        content = acted && !canAct ? "Error: this user can't make changes" : JSON.stringify(await runCopilotTool(call.function.name, args));
+        content = acted && !fnTools.some((t) => t.function.name === call.function.name) ? "Error: this user can't make that change" : JSON.stringify(await runCloserTool(call.function.name, args, s));
       } catch (err) {
         content = `Error: ${String(err)}`;
       }

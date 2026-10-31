@@ -16,10 +16,10 @@ const STEP_LABEL: Record<string, string> = {
   update_action_item: "Updated a task", resolve_conflict: "Resolved a conflict",
 };
 
-/** Tells open pages that Copilot changed data, so they reload. */
-export const COPILOT_CHANGED = "followthru:changed";
+/** Tells open pages that Closer changed data, so they reload. */
+export const CLOSER_CHANGED = "followthru:changed";
 
-export default function Copilot() {
+export default function Closer() {
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [msgs, setMsgs] = useState<Msg[]>([]);
@@ -43,14 +43,14 @@ export default function Copilot() {
     setInput("");
     setBusy(true);
     try {
-      const r = await fetch("/api/copilot", {
+      const r = await fetch("/api/closer", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next.filter((m) => !m.error).map(({ role, content }) => ({ role, content })), page: { path, meetingId } }),
       });
       const data = await r.json();
-      if (!r.ok) throw new Error(data.error ?? "Copilot is unavailable");
+      if (!r.ok) throw new Error(data.error ?? "Closer is unavailable");
       setMsgs((m) => [...m, { role: "assistant", content: data.answer || "Done.", steps: data.steps }]);
-      if (data.changed) window.dispatchEvent(new Event(COPILOT_CHANGED));
+      if (data.changed) window.dispatchEvent(new Event(CLOSER_CHANGED));
     } catch (err) {
       setMsgs((m) => [...m, { role: "assistant", content: err instanceof Error ? err.message : String(err), error: true }]);
     }
@@ -62,7 +62,7 @@ export default function Copilot() {
       {!open && (
         <button onClick={() => setOpen(true)}
           className="fixed bottom-24 right-7 z-40 flex items-center gap-2.5 rounded-full bg-gradient-to-br from-accent to-accent-2 py-3.5 pl-4 pr-5 font-semibold text-accent-ink shadow-[0_18px_40px_-12px_rgba(88,129,87,0.9)] transition hover:scale-[1.03]">
-          <span className="grid h-7 w-7 place-items-center rounded-full bg-accent-ink/15 text-base">✦</span> Copilot
+          <span className="grid h-7 w-7 place-items-center rounded-full bg-accent-ink/15 text-base">✦</span> Closer
         </button>
       )}
       {open && (
@@ -70,8 +70,8 @@ export default function Copilot() {
           <div className="flex items-center gap-3 border-b border-line px-5 py-4">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-lg text-accent-ink">✦</span>
             <div className="flex-1">
-              <div className="font-display text-lg font-semibold">FollowThru Copilot</div>
-              <div className="text-xs text-muted">Your follow-through chief of staff. It can edit, approve and ship.</div>
+              <div className="font-display text-lg font-semibold">Closer</div>
+              <div className="text-xs text-muted">Closes your open loops: it edits, approves and ships for you.</div>
             </div>
             <button className="rounded-lg p-2 text-muted hover:bg-surface-2 hover:text-ink" onClick={() => setOpen(false)} aria-label="Close">✕</button>
           </div>

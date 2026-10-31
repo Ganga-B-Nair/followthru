@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { COPILOT_CHANGED } from "@/components/Copilot";
+import { CLOSER_CHANGED } from "@/components/Closer";
 import DraftCard, { type Draft } from "@/components/DraftCard";
 import Icon from "@/components/Icon";
 import Markdown from "@/components/Markdown";
@@ -39,10 +39,10 @@ export default function MeetingPage() {
 
   const load = useCallback(() => fetch(`/api/meetings/${id}`).then((r) => r.json()).then(setB), [id]);
   useEffect(() => { load(); }, [load]);
-  // Copilot can edit, approve and ship from the chat panel; reload when it does.
+  // Closer can edit, approve and ship from the chat panel; reload when it does.
   useEffect(() => {
-    window.addEventListener(COPILOT_CHANGED, load);
-    return () => window.removeEventListener(COPILOT_CHANGED, load);
+    window.addEventListener(CLOSER_CHANGED, load);
+    return () => window.removeEventListener(CLOSER_CHANGED, load);
   }, [load]);
 
   if (!b) return <div className="text-muted">Loading…</div>;
