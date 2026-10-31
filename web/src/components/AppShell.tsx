@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Copilot from "./Copilot";
+import Closer from "./Closer";
+import Curtain, { curtain } from "./Curtain";
 import Icon from "./Icon";
+import Logo from "./Logo";
 import { Avatar, SessionProvider, useSession } from "./SessionProvider";
 
 type NavItem = { href: string; label: string; icon: string; perm?: string; leadOnly?: boolean };
@@ -49,7 +51,14 @@ function Shell({ children }: { children: React.ReactNode }) {
     fetch("/api/reminders").then((r) => r.json()).then((d) => setReminders(d.reminders ?? [])).catch(() => {});
   }, [path, user]);
 
-  if (path.startsWith("/login")) return <>{children}</>;
+  if (path.startsWith("/login") || path.startsWith("/intro") || path.startsWith("/outro")) return <>{children}</>;
+
+  async function endDemo() {
+    await curtain("closed", "That’s a wrap", "Here’s why it matters.");
+    router.push("/outro");
+    await new Promise((r) => setTimeout(r, 900));
+    await curtain("open");
+  }
 
   async function signOut() {
     await fetch("/api/auth", { method: "DELETE" });
@@ -62,7 +71,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 flex w-[272px] flex-col border-r border-line bg-bg-2/80 backdrop-blur-xl">
         <Link href="/" className="flex items-center gap-3 px-6 pb-6 pt-7">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-accent to-accent-2 text-lg font-bold text-accent-ink shadow-lg shadow-accent/30">↗</span>
+          <Logo size={40} />
           <div>
             <div className="text-[19px] font-semibold tracking-tight">FollowThru</div>
             <div className="text-xs text-muted">Meetings → done</div>
@@ -113,6 +122,7 @@ function Shell({ children }: { children: React.ReactNode }) {
 
       <div className="ml-[272px] flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex items-center justify-end gap-3 border-b border-line bg-bg/70 px-10 py-3.5 backdrop-blur-xl">
+          <button className="btn btn-sm mr-auto !border-live/40 !text-[var(--live)]" onClick={endDemo}>⏹ End demo</button>
           {user && (
             <span className={`chip ${user.role === "lead" ? "!border-accent/40 !text-accent" : "!border-good/40 !text-good"}`}>
               <Icon name={user.role === "lead" ? "shield" : "check"} size={14} /> {user.role === "lead" ? "Team lead view" : "Team member view"}
@@ -124,7 +134,7 @@ function Shell({ children }: { children: React.ReactNode }) {
               {reminders.length > 0 && <span className="rounded-full bg-bad px-1.5 text-xs font-bold text-white">{reminders.length}</span>}
             </button>
             {bell && (
-              <div className="card absolute right-0 mt-2 w-96 p-4">
+              <div className="absolute right-0 z-50 mt-2 w-96 rounded-2xl border border-line bg-surface-solid p-4 shadow-[0_24px_60px_-20px_rgba(0,0,0,0.85)]">
                 <div className="mb-2 font-semibold">Due in the next 48 hours</div>
                 {reminders.length === 0 && <div className="text-sm text-muted">Nothing due. Nice.</div>}
                 {reminders.map((r) => (
@@ -141,7 +151,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="mx-auto w-full max-w-[1320px] flex-1 px-10 pb-28 pt-8">{children}</main>
       </div>
-      {user && <Copilot />}
+      {user && <Closer />}
     </div>
   );
 }
@@ -150,6 +160,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <Shell>{children}</Shell>
+      <Curtain />
     </SessionProvider>
   );
 }
