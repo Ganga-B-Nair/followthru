@@ -1,0 +1,32 @@
+# Secrets: every env file stays local; only the blank template is committed
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Dependencies and build output
+node_modules/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local data (SQLite demo database)
+web/data/
+*.db
+*.db-journal
+
+# Local tool and editor settings
+.claude/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
