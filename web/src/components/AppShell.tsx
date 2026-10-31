@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Copilot from "./Copilot";
 import Icon from "./Icon";
 import { Avatar, SessionProvider, useSession } from "./SessionProvider";
 
@@ -140,6 +141,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         </header>
         <main className="mx-auto w-full max-w-[1320px] flex-1 px-10 pb-28 pt-8">{children}</main>
       </div>
+      {user && <Copilot />}
     </div>
   );
 }
