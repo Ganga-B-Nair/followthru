@@ -1,0 +1,177 @@
+@import "tailwindcss";
+
+/* FollowThru: earthy dark theme. Palette: #DAD7CD bone, #A3B18A sage, #588157 fern, #3A5A40 hunter, #344E41 forest. */
+:root {
+  --bg: #121a15;
+  --bg-2: #18231c;
+  --surface: rgba(52, 78, 65, 0.42);
+  --surface-solid: #1f2d25;
+  --surface-2: rgba(218, 215, 205, 0.05);
+  --ink: #dad7cd;
+  --muted: #a3b18a;
+  --line: rgba(218, 215, 205, 0.1);
+  --accent: #a3b18a;
+  --accent-2: #588157;
+  --accent-ink: #172019;
+  --accent-soft: rgba(163, 177, 138, 0.14);
+  --good: #9fc28a;
+  --good-soft: rgba(159, 194, 138, 0.13);
+  --warn: #d9b36c;
+  --warn-soft: rgba(217, 179, 108, 0.13);
+  --bad: #d98a6c;
+  --bad-soft: rgba(217, 138, 108, 0.14);
+  --zoom: #6f9fd8;
+  --live: #e0896b;
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-solid: var(--surface-solid);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-soft: var(--accent-soft);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-zoom: var(--zoom);
+  --color-live: var(--live);
+  --font-sans: var(--ff-body);
+  --font-display: var(--ff-display);
+  --font-mono: var(--ff-code);
+}
+
+html { font-size: 16.5px; }
+
+body {
+  background:
+    radial-gradient(1200px 600px at 85% -10%, rgba(88, 129, 87, 0.28), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(163, 177, 138, 0.12), transparent 60%),
+    var(--bg);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-family: var(--ff-body), system-ui, sans-serif;
+}
+
+/* Fraunces gives headings a soft, organic feel; body stays DM Sans for legibility. */
+h1, h2, h3, .font-display { font-family: var(--ff-display), Georgia, serif; font-variation-settings: "SOFT" 100, "WONK" 0; letter-spacing: -0.01em; }
+
+::selection { background: rgba(163, 177, 138, 0.35); }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 1px 0 rgba(218, 215, 205, 0.05) inset, 0 20px 40px -24px rgba(0, 0, 0, 0.6);
+}
+
+.glow {
+  position: relative;
+  background: linear-gradient(var(--surface-solid), var(--surface-solid)) padding-box,
+    linear-gradient(135deg, rgba(163, 177, 138, 0.75), rgba(88, 129, 87, 0.55) 50%, rgba(218, 215, 205, 0.06)) border-box;
+  border: 1px solid transparent;
+}
+
+.gradient-text {
+  background: linear-gradient(100deg, #f1efe7 10%, #dad7cd 40%, #a3b18a 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 10px 18px;
+  font-size: 15px;
+  font-weight: 550;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  transition: background 0.15s, transform 0.1s, box-shadow 0.15s, opacity 0.15s;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn:hover { background: rgba(218, 215, 205, 0.1); }
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-primary {
+  background: linear-gradient(135deg, #a3b18a, #588157);
+  color: #142017;
+  border-color: transparent;
+  box-shadow: 0 8px 24px -10px rgba(88, 129, 87, 0.9);
+}
+.btn-primary:hover { background: linear-gradient(135deg, #b2bf9a, #6a9468); }
+.btn-zoom { background: #3f6f9f; color: #f1efe7; border-color: transparent; box-shadow: 0 8px 24px -10px rgba(63, 111, 159, 0.8); }
+.btn-zoom:hover { background: #4a7dad; }
+.btn-sm { padding: 7px 13px; font-size: 14px; border-radius: 10px; }
+.btn-lg { padding: 14px 24px; font-size: 16.5px; border-radius: 14px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 550;
+  border-radius: 999px;
+  padding: 3px 11px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+
+.field {
+  width: 100%;
+  background: rgba(10, 16, 12, 0.35);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  font-size: 16px;
+  color: var(--ink);
+}
+.field::placeholder { color: #7c8a70; }
+.field:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.label { font-size: 12.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+
+.md h1, .md h2 { font-size: 18px; font-weight: 650; margin: 14px 0 6px; }
+.md h3 { font-size: 16px; font-weight: 650; margin: 12px 0 4px; }
+.md p { margin: 5px 0; }
+.md ul { margin: 5px 0 5px 20px; list-style: disc; }
+.md ol { margin: 5px 0 5px 20px; list-style: decimal; }
+.md li { margin: 3px 0; }
+.md .todo { color: var(--warn); font-weight: 550; background: var(--warn-soft); border-radius: 5px; padding: 0 4px; }
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(163, 177, 138, 0.55); }
+  100% { box-shadow: 0 0 0 22px transparent; }
+}
+.listening { animation: pulse-ring 1.4s ease-out infinite; }
+
+@keyframes live-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+.live-dot { width: 9px; height: 9px; border-radius: 999px; background: var(--live); animation: live-dot 1.2s infinite; box-shadow: 0 0 12px var(--live); }
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise 0.45s ease-out both; }
+
+@keyframes wave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+.wave span { display: inline-block; width: 3px; height: 16px; margin: 0 1.5px; border-radius: 2px; background: var(--accent-2); animation: wave 0.9s ease-in-out infinite; }
+.wave span:nth-child(2) { animation-delay: 0.1s; } .wave span:nth-child(3) { animation-delay: 0.2s; }
+.wave span:nth-child(4) { animation-delay: 0.3s; } .wave span:nth-child(5) { animation-delay: 0.4s; }
+
+.scroll-thin::-webkit-scrollbar { width: 8px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: rgba(218, 215, 205, 0.12); border-radius: 8px; }
