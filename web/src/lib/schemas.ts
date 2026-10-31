@@ -107,3 +107,9 @@ export const CheckinParse = z.object({
 export type CheckinParse = z.infer<typeof CheckinParse>;
 
 export const Markdown = z.object({ markdown: z.string() });
+
+export const LiveNote = z.object({
+  tag: z.enum(["decision", "action", "correction", "none"]),
+  note: z.string().describe("The note as it should appear in meeting notes: one short sentence, final intent only"),
+});
+export type LiveNote = z.infer<typeof LiveNote>;
