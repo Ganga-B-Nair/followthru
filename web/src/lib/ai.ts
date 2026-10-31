@@ -46,6 +46,8 @@ export async function structured<S extends z.ZodType>(opts: {
   maxTokens?: number;
   /** Mechanical tasks skip model reasoning, which is most of the free tier's latency. */
   fast?: boolean;
+  /** Give up sooner than the default, for calls a live screen is waiting on. */
+  timeoutMs?: number;
 }): Promise<z.infer<S>> {
   return provider() === "anthropic" ? structuredClaude(opts) : structuredOpenAI(opts);
 }
@@ -76,17 +78,18 @@ export class LLMError extends Error {
 const isGemini = () => !process.env.LLM_BASE_URL && !!process.env.GEMINI_API_KEY;
 /** Free-tier Gemini models get overloaded; when the main one is busy, the lighter one answers. */
 const FALLBACK_MODEL = () => process.env.LLM_FALLBACK_MODEL || (isGemini() ? "gemini-3.5-flash-lite" : "");
-const CALL_TIMEOUT_MS = 30_000;
+// When the free tier slows down, failing fast lets the demo fall back to curated results instead of stalling.
+const CALL_TIMEOUT_MS = 12_000;
 
-async function postChat(model: string, body: Record<string, unknown>, reasoning: "none" | "low" = "low") {
+async function postChat(model: string, body: Record<string, unknown>, reasoning: "none" | "low" = "low", timeoutMs = CALL_TIMEOUT_MS) {
   const res = await fetch(`${OPENAI_BASE()}/chat/completions`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${OPENAI_KEY()}` },
     // Low (or no) reasoning keeps Gemini at seconds per call instead of tens of seconds.
     body: JSON.stringify({ model, ...(isGemini() ? { reasoning_effort: reasoning } : {}), ...body }),
-    signal: AbortSignal.timeout(CALL_TIMEOUT_MS),
+    signal: AbortSignal.timeout(timeoutMs),
   }).catch((err: unknown) => {
-    throw new LLMError(504, err instanceof Error && err.name === "TimeoutError" ? `no answer within ${CALL_TIMEOUT_MS / 1000}s` : String(err));
+    throw new LLMError(504, err instanceof Error && err.name === "TimeoutError" ? `no answer within ${timeoutMs / 1000}s` : String(err));
   });
   if (!res.ok) {
     const text = await res.text();
@@ -100,14 +103,15 @@ async function postChat(model: string, body: Record<string, unknown>, reasoning:
   return res.json();
 }
 
-export async function chatCompletion(body: Record<string, unknown>, fast = false): Promise<{ choices: { message: OpenAIMessage; finish_reason: string }[] }> {
+export async function chatCompletion(body: Record<string, unknown>, fast = false, timeoutMs?: number): Promise<{ choices: { message: OpenAIMessage; finish_reason: string }[] }> {
   try {
-    return await postChat(modelName(), body, fast ? "none" : "low");
+    return await postChat(modelName(), body, fast ? "none" : "low", timeoutMs);
   } catch (err) {
     const fallback = FALLBACK_MODEL();
-    const busy = err instanceof LLMError && [404, 429, 500, 503, 504].includes(err.status);
+    // A quick "busy" answer is worth one retry on the lighter model; a timeout isn't, it would double the wait.
+    const busy = err instanceof LLMError && [404, 429, 500, 503].includes(err.status);
     if (!busy || !fallback || fallback === modelName()) throw err;
-    return postChat(fallback, body);
+    return postChat(fallback, body, "low", timeoutMs);
   }
 }
 
@@ -119,7 +123,7 @@ export type OpenAIMessage = {
 };
 
 /** JSON mode plus the schema in the prompt; zod validates and one retry repairs mistakes. */
-async function structuredOpenAI<S extends z.ZodType>(opts: { schema: S; system: string; user: string; maxTokens?: number; fast?: boolean }): Promise<z.infer<S>> {
+async function structuredOpenAI<S extends z.ZodType>(opts: { schema: S; system: string; user: string; maxTokens?: number; fast?: boolean; timeoutMs?: number }): Promise<z.infer<S>> {
   const jsonSchema = JSON.stringify(z.toJSONSchema(opts.schema));
   const messages: OpenAIMessage[] = [
     { role: "system", content: `${opts.system}\n\nRespond with ONLY a JSON object (no prose, no code fences) that matches this JSON Schema exactly. Every property is required; use null where a value is absent.\n${jsonSchema}` },
@@ -127,7 +131,7 @@ async function structuredOpenAI<S extends z.ZodType>(opts: { schema: S; system: 
   ];
   for (let attempt = 0; attempt < 2; attempt++) {
     const started = Date.now();
-    const out = await chatCompletion({ messages, response_format: { type: "json_object" }, max_tokens: opts.maxTokens ?? 8000 }, opts.fast);
+    const out = await chatCompletion({ messages, response_format: { type: "json_object" }, max_tokens: opts.maxTokens ?? 8000 }, opts.fast, opts.timeoutMs);
     console.log(`[ai] ${opts.system.slice(0, 28)}… attempt ${attempt + 1}: ${Date.now() - started}ms`);
     const text = (out.choices[0]?.message.content ?? "").replace(/^```(?:json)?\s*|\s*```$/g, "");
     let parsed: unknown;

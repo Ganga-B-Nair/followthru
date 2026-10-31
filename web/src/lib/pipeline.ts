@@ -18,16 +18,32 @@ type Emit = (e: PipelineEvent) => void;
 /** Demo mode paces the steps so the agent timeline is readable on screen. */
 const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+/** How long a demo meeting waits on the free AI tier before finishing with the hand-checked results. */
+const DEMO_AI_BUDGET_MS = 10_000;
+
 export async function runPipeline(raw: string, emit: Emit, heldAt = new Date(), source = "recap"): Promise<string> {
   const meetingId = newId();
+  const curated = aiEnabled() && !!findFixture(raw);
+  let abandoned = false;
+  const liveRun = runSteps(raw, (e) => { if (!abandoned) emit(e); }, heldAt, source, meetingId, aiEnabled());
   try {
-    return await runSteps(raw, emit, heldAt, source, meetingId, aiEnabled());
+    if (!curated) return await liveRun;
+    // A slow free tier shouldn't stall a demo: race the live run against the budget.
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const budget = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new LLMError(504, "AI took too long")), DEMO_AI_BUDGET_MS); });
+    try {
+      return await Promise.race([liveRun, budget]);
+    } finally {
+      clearTimeout(timer);
+    }
   } catch (err) {
     // The free AI tier can hit its per-minute quota or be overloaded. For the demo meetings,
     // fall back to the hand-checked results so the run still completes.
-    if (!(err instanceof LLMError) || !findFixture(raw)) throw err;
+    if (!(err instanceof LLMError) || !curated) throw err;
     console.warn(`[pipeline] AI unavailable (${err.status}), using curated results`);
-    await discardMeeting(meetingId);
+    abandoned = true;
+    // The live run may still be going: once it settles, remove everything it wrote.
+    liveRun.catch(() => {}).finally(() => discardMeeting(meetingId).catch(() => {}));
     return runSteps(raw, emit, heldAt, source, newId(), false);
   }
 }

@@ -12,7 +12,7 @@ export const POST = safe(async (req: Request) => {
   const { speaker, text, context } = (await req.json()) as { speaker: string; text: string; context?: string[] };
   if (!aiEnabled()) return Response.json(ruleNote(text));
   const note = await structured({
-    schema: LiveNote, system: LIVE_NOTE, effort: "low", fast: true, maxTokens: 400,
+    schema: LiveNote, system: LIVE_NOTE, effort: "low", fast: true, maxTokens: 400, timeoutMs: 6000,
     user: `<earlier_lines>\n${(context ?? []).slice(-8).join("\n")}\n</earlier_lines>\n\n<latest speaker="${speaker}">\n${text}\n</latest>`,
   });
   return Response.json(note);
