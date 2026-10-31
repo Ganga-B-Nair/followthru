@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { COPILOT_CHANGED } from "@/components/Copilot";
 import DraftCard, { type Draft } from "@/components/DraftCard";
 import Icon from "@/components/Icon";
 import Markdown from "@/components/Markdown";
@@ -19,6 +20,7 @@ type Bundle = {
   conflicts: { id: string; kind: string; explanation: string; resolution: string | null; new_text: string; old_text: string; old_meeting_title: string; old_meeting_date: string }[];
 };
 type Ops = { op: string; ids: string[]; field: string | null; value: string | null }[];
+type Tab = "notes" | "transcript" | "conflicts" | "approve" | "next";
 
 export default function MeetingPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,9 +35,15 @@ export default function MeetingPage() {
   const [brief, setBrief] = useState<string | null>(null);
   const [briefBusy, setBriefBusy] = useState(false);
   const [showRaw, setShowRaw] = useState(true);
+  const [tab, setTab] = useState<Tab>("notes");
 
   const load = useCallback(() => fetch(`/api/meetings/${id}`).then((r) => r.json()).then(setB), [id]);
   useEffect(() => { load(); }, [load]);
+  // Copilot can edit, approve and ship from the chat panel; reload when it does.
+  useEffect(() => {
+    window.addEventListener(COPILOT_CHANGED, load);
+    return () => window.removeEventListener(COPILOT_CHANGED, load);
+  }, [load]);
 
   if (!b) return <div className="text-muted">Loading…</div>;
   if (b.error || !b.meeting) return <div className="card p-8 text-lg"><Icon name="lock" className="mb-3 text-muted" />{b.error ?? "Meeting not found."} <Link className="text-accent" href="/meetings">Back to meetings</Link></div>;
@@ -104,6 +112,14 @@ export default function MeetingPage() {
     router.push("/meetings");
   }
 
+  const TABS: { id: Tab; label: string; hint: string; icon: string; badge?: number; tone?: string }[] = [
+    { id: "notes", label: "AI notes", hint: "Summary, decisions, owners", icon: "sparkle", badge: decisions.length + actions.length },
+    { id: "transcript", label: isZoom ? "Transcript" : "What you said", hint: `${selfCorrections} self-correction${selfCorrections === 1 ? "" : "s"} resolved`, icon: "mic" },
+    { id: "conflicts", label: "Conflict guard", hint: openConflicts.length ? `${openConflicts.length} need a decision` : "All consistent", icon: "alert", badge: openConflicts.length || undefined, tone: "warn" },
+    { id: "approve", label: "Approve & ship", hint: `${pending.length} waiting · ~${meeting.minutes_saved} min of work`, icon: "check", badge: pending.length || undefined, tone: "accent" },
+    { id: "next", label: "Next meeting", hint: "Open-Loop Brief", icon: "calendar" },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -124,6 +140,26 @@ export default function MeetingPage() {
         </div>
       </section>
 
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr] [&>*]:min-w-0">
+        <nav className="card h-fit space-y-1 p-3 lg:sticky lg:top-6">
+          {TABS.map((t, i) => (
+            <button key={t.id} onClick={() => setTab(t.id)}
+              className={`group flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition ${tab === t.id ? "bg-accent-soft shadow-[inset_0_0_0_1px_rgba(163,177,138,0.35)]" : "hover:bg-surface-2"}`}>
+              <span className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl text-sm font-bold ${tab === t.id ? "bg-gradient-to-br from-accent to-accent-2 text-accent-ink" : "bg-surface-2 text-muted"}`}>{i + 1}</span>
+              <span className="min-w-0 flex-1">
+                <span className={`block font-semibold ${tab === t.id ? "text-ink" : "text-ink/80"}`}>{t.label}</span>
+                <span className="block truncate text-xs text-muted">{t.hint}</span>
+              </span>
+              {t.badge ? <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${t.tone === "warn" ? "bg-warn-soft text-warn" : "bg-accent-soft text-accent"}`}>{t.badge}</span> : null}
+            </button>
+          ))}
+          {pending.length > 0 && tab !== "approve" && (
+            <button className="btn btn-primary mt-2 w-full" onClick={() => setTab("approve")}>Review {pending.length} follow-ups →</button>
+          )}
+        </nav>
+
+        <div key={tab} className="rise space-y-6">
+          {tab === "notes" && (<>
       {keyPoints.length > 0 && (
         <section className="card p-6">
           <h2 className="mb-4 flex items-center gap-2 text-xl font-semibold"><Icon name="sparkle" className="text-accent" /> AI notes</h2>
@@ -132,47 +168,6 @@ export default function MeetingPage() {
               <div key={i} className="flex gap-3 rounded-xl border border-line bg-surface-2 p-4 text-[16px]"><span className="text-good">●</span>{k}</div>
             ))}
           </div>
-        </section>
-      )}
-
-      {/* Speech to intent */}
-      {meeting.raw_text !== meeting.clean_text && (
-        <section className="card p-6">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-xl font-semibold">{isZoom ? "📝 Transcript → what was meant" : "🎙️ What you said → what you meant"}</h2>
-            <div className="flex items-center gap-2">
-              <span className="chip">{selfCorrections} self-correction{selfCorrections === 1 ? "" : "s"} resolved</span>
-              <button className="btn btn-sm" onClick={() => setShowRaw(!showRaw)}>{showRaw ? "Show clean" : "Show raw"}</button>
-            </div>
-          </div>
-          <div className="whitespace-pre-line">{showRaw ? <SpeechDiff raw={meeting.raw_text} corrections={corrections} /> : <p className="text-[16px] leading-8">{meeting.clean_text}</p>}</div>
-        </section>
-      )}
-
-      {/* Conflicts */}
-      {conflicts.length > 0 && (
-        <section className="space-y-3">
-          <h2 className="text-xl font-semibold">⚠️ Conflict guard {openConflicts.length > 0 && <span className="chip !bg-warn-soft !text-warn">{openConflicts.length} need a decision</span>}</h2>
-          {conflicts.map((c) => (
-            <div key={c.id} className={`card border-l-4 p-6 ${c.kind === "contradicts" ? "border-l-warn" : "border-l-accent"}`}>
-              <div className="text-[17px] font-medium">{c.explanation}</div>
-              <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-                <div className="rounded-lg bg-surface-2 p-2"><div className="text-xs text-muted">Today</div>{c.new_text}</div>
-                <div className="rounded-lg bg-surface-2 p-2"><div className="text-xs text-muted">{c.old_meeting_title} · {fmtDate(c.old_meeting_date)}</div>{c.old_text}</div>
-              </div>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {c.resolution ? (
-                  <span className="chip">Resolved: {c.resolution.replace("_", " ")}</span>
-                ) : (
-                  <>
-                    <button className="btn btn-sm btn-primary" onClick={() => resolve(c.id, "supersede")}>Today&apos;s decision replaces it</button>
-                    <button className="btn btn-sm" onClick={() => resolve(c.id, "keep_both")}>Both stand</button>
-                    <button className="btn btn-sm" onClick={() => resolve(c.id, "flag")}>Flag for next meeting</button>
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
         </section>
       )}
 
@@ -204,8 +199,56 @@ export default function MeetingPage() {
         </div>
       </section>
 
+          </>)}
+          {tab === "transcript" && (<>
+      {/* Speech to intent */}
+      {(
+        <section className="card p-6">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-semibold">{isZoom ? "📝 Transcript → what was meant" : "🎙️ What you said → what you meant"}</h2>
+            <div className="flex items-center gap-2">
+              <span className="chip">{selfCorrections} self-correction{selfCorrections === 1 ? "" : "s"} resolved</span>
+              <button className="btn btn-sm" onClick={() => setShowRaw(!showRaw)}>{showRaw ? "Show clean" : "Show raw"}</button>
+            </div>
+          </div>
+          <div className="whitespace-pre-line">{showRaw ? <SpeechDiff raw={meeting.raw_text} corrections={corrections} /> : <p className="text-[16px] leading-8">{meeting.clean_text}</p>}</div>
+        </section>
+      )}
+
+          </>)}
+          {tab === "conflicts" && (<>
+      {/* Conflicts */}
+      {(
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold">⚠️ Conflict guard {openConflicts.length > 0 && <span className="chip !bg-warn-soft !text-warn">{openConflicts.length} need a decision</span>}</h2>
+          {conflicts.length === 0 && <div className="card p-8 text-center text-muted">No contradictions with earlier meetings. Everything decided today is consistent with your decision memory.</div>}
+          {conflicts.map((c) => (
+            <div key={c.id} className={`card border-l-4 p-6 ${c.kind === "contradicts" ? "border-l-warn" : "border-l-accent"}`}>
+              <div className="text-[17px] font-medium">{c.explanation}</div>
+              <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                <div className="rounded-lg bg-surface-2 p-2"><div className="text-xs text-muted">Today</div>{c.new_text}</div>
+                <div className="rounded-lg bg-surface-2 p-2"><div className="text-xs text-muted">{c.old_meeting_title} · {fmtDate(c.old_meeting_date)}</div>{c.old_text}</div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {c.resolution ? (
+                  <span className="chip">Resolved: {c.resolution.replace("_", " ")}</span>
+                ) : (
+                  <>
+                    <button className="btn btn-sm btn-primary" onClick={() => resolve(c.id, "supersede")}>Today&apos;s decision replaces it</button>
+                    <button className="btn btn-sm" onClick={() => resolve(c.id, "keep_both")}>Both stand</button>
+                    <button className="btn btn-sm" onClick={() => resolve(c.id, "flag")}>Flag for next meeting</button>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
+          </>)}
+          {tab === "approve" && (<>
       {/* Approval queue */}
-      <section>
+      <section className="rise">
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
           <div>
             <h2 className="text-xl font-semibold">✅ Approval queue</h2>
@@ -240,6 +283,8 @@ export default function MeetingPage() {
         </div>
       </section>
 
+          </>)}
+          {tab === "next" && (<>
       {/* Open-loop brief */}
       <section className="card p-6">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -251,6 +296,10 @@ export default function MeetingPage() {
         </div>
         {brief && <div className="mt-3 rounded-lg bg-surface-2 p-4"><Markdown text={brief} /></div>}
       </section>
+
+          </>)}
+        </div>
+      </div>
 
       {b.viewer?.role === "lead" && <div className="text-right"><button className="btn btn-sm" onClick={remove}>Delete meeting</button></div>}
 
