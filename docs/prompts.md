@@ -23,6 +23,13 @@ Screenshots of each Wispr Flow session go in [`screenshots/`](screenshots/) and 
 | 10 | Demo run-through | 🎙️ Wispr Flow | Claude Code | "Run the demo": full click-through on live Gemini; fixed a quota-fallback edge case; reset for recording |
 | 11 | Git repo + next features | 🎙️ Wispr Flow | Claude Code | Commit everything in small, secret-free commits with no AI trailers; then live camera call, tabbed meeting page, and a chatbot |
 | 12 | Demo polish | 🎙️ Wispr Flow | Claude Code | Intro loader and curtain, end-demo USP screen, scripted live lines with mic/cam toggles, owner-only check-off, solid notifications, Copilot renamed Closer, logo slot |
+| 13 | Server restart | ⌨️ Typed | Claude Code | "run server again": moved the server to a terminal tab so it keeps running between turns |
+| 14 | Final check | 🎙️ Wispr Flow | Claude Code | Rechecked every page and API; fixed the logo file name and served the logo to signed-out pages |
+| 15 | Shorter script | ⌨️ Typed | Claude Code | "cut short my 7 lines into 2": two presenter lines; fail-fast AI budgets after the free tier slowed mid-recording |
+| 16 | Deploy | ⌨️ Typed | Claude Code | "Deploy it": prepared the app for Vercel (database in /tmp, per-instance demo seeding, upload ignore list) |
+| 17 | Deploy | 🖱️ UI choice | Claude Code | "Signed in, deploy": deployed to followthru-mu.vercel.app and smoke-tested it |
+| 18 | Live AI key | 🖱️ UI choice + ⌨️ Typed | Claude Code | Key handling: the user added GEMINI_API_KEY in the Vercel dashboard themself; redeployed and confirmed live AI |
+| 19 | LinkedIn | 🎙️ Wispr Flow + 📋 Pasted | Claude Code | Final LinkedIn post from the hackathon's template; this post was dictated with Wispr Flow too ([linkedin.md](linkedin.md)) |
 
 ---
 

@@ -131,6 +131,66 @@ Every prompt I dictated while building: [[repo link]]/blob/main/docs/prompts.md
 
 ---
 
+## Final post (as published)
+
+**Visual:** the demo video, uploaded natively. **First comment:** the links below.
+
+```
+We shipped it! 🚀
+
+In one day, between exam prep sessions, I built FollowThru for the AI Hackathon by Product Space in collaboration with Wispr Flow.
+
+And I didn't type a single prompt. Every instruction that built this app was dictated through Wispr Flow. So was this post. 🎙️
+
+The problem:
+Every meeting ends with “great, someone will send that”… and then nobody does. AI notetakers didn't fix it; they just gave us a longer to-do list.
+
+What I built:
+FollowThru, an AI notetaker that works alongside Zoom and doesn't make to-dos. It does them.
+When the call ends, the follow-up emails, calendar invites, docs and announcements are already drafted, checked against everything your team decided before, and waiting for one approval.
+
+🎥 Demo video below
+🔗 Try it live: followthru-mu.vercel.app
+
+How it works:
+Zoom call (or a 30-second Wispr Flow voice recap)
+→ live AI notes while you talk
+→ speech-to-intent: “Friday, no wait, Thursday” becomes Thursday
+→ decisions, owners and deadlines pulled out
+→ a conflict guard that remembers what you decided last week and flags contradictions
+→ ready-to-send drafts for Gmail, Google Calendar and Notion
+→ approve with a click, by voice, or just ask Closer, a chat agent that edits, approves and ships for you
+
+Built with Next.js and Google Gemini's free tier, with Claude Code as my AI pair programmer, prompted entirely by voice.
+
+What went right:
+Building by voice. I explain intent far better out loud than when I type, and rambling is fine when the agent resolves your self-corrections. Every prompt I dictated is logged in the repo, unedited.
+
+What didn't:
+Halfway through recording my demo, the free AI tier slowed to 30-second responses and the take fell apart. I had to add time budgets and graceful fallbacks so the app never stalls on screen. I also cut my on-camera script from seven lines to two. Build for the network you'll actually have.
+
+Biggest takeaway:
+People don't need another meeting summary. The value is in the last mile: the email actually sent, the invite actually booked. And trust comes from showing exactly what the AI changed and never shipping anything without your approval.
+
+What's next:
+A real Zoom Marketplace app, Slack and Jira actions, and testing with a few small teams to see if their follow-through rate actually goes up.
+
+Huge thanks to Product Space and Wispr Flow for putting this together.
+
+I'd love your honest feedback. Would you trust an AI to send your follow-ups? What would you change? Drop your thoughts in the comments 👇
+
+#AIHackathon #ProductSpace #WisprFlow #BuildInPublic #ProductManagement #AI
+```
+
+**First comment:**
+```
+🔗 Live app: https://followthru-mu.vercel.app (start at /intro)
+💻 Code: https://github.com/Ganga-B-Nair/followthru
+🎙️ Every prompt I dictated while building it: https://github.com/Ganga-B-Nair/followthru/blob/main/docs/prompts.md
+```
+
+---
+
 ## Engagement checklist (counts for the bonus)
 
 - [ ] Post at a time when your network is active, and reply to every comment in the first hour
