@@ -23,7 +23,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      const emit = (e: PipelineEvent) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
+      // If the browser leaves mid-run, keep going and save the meeting; just stop sending progress.
+      const emit = (e: PipelineEvent) => { try { controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`)); } catch {} };
       try {
         const heldAt = new Date(z.start_at);
         let meetingId: string;
@@ -39,7 +40,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         console.error(err);
         emit({ type: "error", message: friendlyError(err) });
       } finally {
-        controller.close();
+        try { controller.close(); } catch {}
       }
     },
   });
