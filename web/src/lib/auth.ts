@@ -66,6 +66,8 @@ export async function session(): Promise<Session | null> {
   const id = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!id) return null;
   await ensureUsers();
+  // Imported lazily: seed.ts depends on this module.
+  await (await import("./seed")).seedIfEmpty();
   const user = await one<UserRow>("SELECT * FROM users WHERE id = ?", [id]);
   if (!user) return null;
   return { user, perms: user.role === "lead" ? ALL_ON : await memberPermissions() };

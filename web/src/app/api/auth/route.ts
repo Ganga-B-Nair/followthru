@@ -1,8 +1,7 @@
 import { cookies } from "next/headers";
 import { DEMO_USERS, ensureUsers, SESSION_COOKIE, session } from "@/lib/auth";
 import { modelName, provider } from "@/lib/ai";
-import { one } from "@/lib/db";
-import { POST as seed } from "../seed/route";
+import { seedIfEmpty } from "@/lib/seed";
 
 export const runtime = "nodejs";
 
@@ -17,8 +16,7 @@ export async function POST(req: Request) {
   if (!DEMO_USERS.some((u) => u.id === userId)) return Response.json({ error: "Unknown demo user" }, { status: 400 });
   await ensureUsers();
   // First sign-in on an empty database loads the demo workspace.
-  const z = await one<{ n: number }>("SELECT COUNT(*) AS n FROM zoom_meetings");
-  if (!z?.n) await seed(new Request("http://local/seed", { method: "POST", body: "{}" }));
+  await seedIfEmpty();
   (await cookies()).set(SESSION_COOKIE, userId, { httpOnly: true, sameSite: "lax", path: "/", maxAge: 60 * 60 * 24 * 7 });
   return Response.json({ ok: true });
 }
